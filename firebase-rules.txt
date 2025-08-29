@@ -1,0 +1,95 @@
+{
+  "rules": {
+    // Estructura de datos para Heart Burner
+    
+    // THERAPISTS - Solo el terapeuta puede leer/escribir sus datos
+    "therapists": {
+      "$therapistId": {
+        ".read": "$therapistId === auth.uid",
+        ".write": "$therapistId === auth.uid",
+        ".validate": "newData.hasChildren(['name', 'email', 'sessionDuration', 'workingHours', 'workingDays', 'timeZone'])"
+      }
+    },
+    
+    // APPOINTMENTS - Solo el terapeuta puede gestionar sus citas
+    "appointments": {
+      "$therapistId": {
+        ".read": "$therapistId === auth.uid",
+        ".write": "$therapistId === auth.uid",
+        "$appointmentId": {
+          ".validate": "newData.hasChildren(['patientName', 'patientEmail', 'startTime', 'endTime', 'type', 'status'])"
+        }
+      }
+    },
+    
+    // PATIENTS - Solo el terapeuta puede ver sus pacientes
+    "patients": {
+      "$therapistId": {
+        ".read": "$therapistId === auth.uid",
+        ".write": "$therapistId === auth.uid",
+        "$patientId": {
+          ".validate": "newData.hasChildren(['name', 'email', 'isRecurrent'])"
+        }
+      }
+    },
+    
+    // BOOKING_LINKS - Solo el terapeuta puede gestionar sus enlaces
+    "booking_links": {
+      "$bookingLinkId": {
+        ".read": "data.child('therapistId').val() === auth.uid || root.child('public_booking_links/' + $bookingLinkId).exists()",
+        ".write": "data.child('therapistId').val() === auth.uid",
+        ".validate": "newData.hasChildren(['therapistId', 'active'])"
+      }
+    },
+    
+    // PUBLIC_BOOKING_LINKS - Solo lectura pública para enlaces activos
+    "public_booking_links": {
+      "$bookingLinkId": {
+        ".read": true,
+        ".write": "root.child('booking_links/' + $bookingLinkId + '/therapistId').val() === auth.uid",
+        ".validate": "newData.hasChildren(['therapistId', 'therapistName', 'specialization', 'sessionDuration'])"
+      }
+    },
+    
+    // PUBLIC_BOOKINGS - Permite a pacientes crear citas públicas (sin auth)
+    "public_bookings": {
+      "$bookingLinkId": {
+        ".read": true,
+        ".write": true,
+        "$bookingId": {
+          ".validate": "newData.hasChildren(['patientName', 'patientEmail', 'startTime', 'endTime', 'type', 'status', 'createdAt'])"
+        }
+      }
+    },
+    
+    // AVAILABLE_SLOTS - Slots públicos para mostrar disponibilidad
+    "available_slots": {
+      "$therapistId": {
+        ".read": true,
+        ".write": "$therapistId === auth.uid"
+      }
+    },
+    
+    // ANALYTICS - Solo el terapeuta puede ver sus estadísticas
+    "analytics": {
+      "$therapistId": {
+        ".read": "$therapistId === auth.uid",
+        ".write": "$therapistId === auth.uid"
+      }
+    },
+    
+    // SETTINGS - Configuraciones del terapeuta
+    "settings": {
+      "$therapistId": {
+        ".read": "$therapistId === auth.uid",
+        ".write": "$therapistId === auth.uid"
+      }
+    },
+    
+    // Default rules
+    "$other": {
+      ".read": false,
+      ".write": false
+    }
+  }
+}
